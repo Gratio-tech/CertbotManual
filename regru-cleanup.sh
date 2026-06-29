@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source /etc/example.conf
+# Определяем пути где находятся скрипты
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
+
+CONFIG_FILE="${CERTBOT_MANUAL_CONFIG:-/etc/example.conf}"
+source "$CONFIG_FILE"
 
 LOG=/var/log/certbot-regru-hook.log
 
@@ -60,16 +65,16 @@ resp="$(
     -d "output_format=json" \
     -d "output_content_type=plain"
 )" || {
-  log "WARN: REG.RU remove_record curl failed for ${subdomain}.${zone}"
-  /usr/local/bin/acme-notify.sh "ACME cleanup failed for ${fqdn}: curl failed" || true
+  log "WARN: Reg.ru remove_record curl failed for ${subdomain}.${zone}"
+  "${SCRIPT_DIR}/acme-notify.sh" "ACME cleanup failed for ${fqdn}: curl failed" || true
   exit 0
 }
 
-log "REG.RU zone/remove_record: ${resp}"
+log "Reg.ru zone/remove_record: ${resp}"
 
 if ! jq -e '.result == "success" and (.answer.domains[0].result == "success")' <<<"$resp" >/dev/null; then
-  log "WARN: REG.RU remove_record returned non-success for ${subdomain}.${zone}"
-  /usr/local/bin/acme-notify.sh "ACME cleanup failed for ${fqdn}: REG.RU returned non-success" || true
+  log "WARN: Reg.ru remove_record returned non-success for ${subdomain}.${zone}"
+  "${SCRIPT_DIR}/acme-notify.sh" "ACME cleanup failed for ${fqdn}: Reg.ru returned non-success" || true
 fi
 
 exit 0

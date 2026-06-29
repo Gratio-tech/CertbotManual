@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source /etc/example.conf
+# Определяем пути где находятся скрипты
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
+
+CONFIG_FILE="${CERTBOT_MANUAL_CONFIG:-/etc/example.conf}"
+source "$CONFIG_FILE"
 
 LOG=/var/log/certbot-regru-hook.log
 
@@ -11,7 +16,7 @@ log() {
 
 fail() {
   log "ERROR: $*"
-  /usr/local/bin/acme-notify.sh "ACME DNS auth failed for ${CERTBOT_IDENTIFIER:-${CERTBOT_DOMAIN:-unknown}}: $*" || true
+  "${SCRIPT_DIR}/acme-notify.sh" "ACME DNS auth failed for ${CERTBOT_IDENTIFIER:-${CERTBOT_DOMAIN:-unknown}}: $*" || true
   exit 1
 }
 
@@ -46,7 +51,7 @@ if [[ "$fqdn" == "$zone" ]]; then
   subdomain="@"
 else
   suffix=".${zone}"
-  [[ "$fqdn" == *"$suffix" ]] || fail "challenge fqdn ${fqdn} is not inside REGRU_ZONE=${zone}"
+  [[ "$fqdn" == *"$suffix" ]] || fail "Challenge fqdn ${fqdn} is not inside REGRU_ZONE=${zone}"
   subdomain="${fqdn%$suffix}"
 fi
 
@@ -103,10 +108,7 @@ has_txt_on_ns() {
 
 log "Adding TXT ${subdomain}.${zone} = ${validation}"
 
-api zone/add_txt \
-  -d "subdomain=${subdomain}" \
-  --data-urlencode "text=${validation}" \
-  || fail "REG.RU zone/add_txt failed"
+api zone/add_txt || fail "Reg.ru zone/add_txt failed"
 
 mapfile -t ns_list < <(dig +short NS "$zone" | sed 's/\.$//')
 ((${#ns_list[@]} > 0)) || fail "No authoritative NS returned for ${zone}"
@@ -135,7 +137,7 @@ while (( SECONDS < deadline )); do
   fi
 
   if (( ok )); then
-    log "TXT propagated on authoritative NS for ${fqdn}"
+    log "TXT propagated on authoritative NS and public resolvers for ${fqdn}"
     exit 0
   fi
 
