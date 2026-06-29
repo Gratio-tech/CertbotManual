@@ -8,14 +8,17 @@ CONFIG_FILE="${SCRIPT_DIR}/example.conf}"
 
 source "$CONFIG_FILE"
 
+SUBDOMAIN="${1:?Usage: $0 _acme-challenge.git}"
+
 # В subdomain следует писать ваш домен для которого нужно очистить TXT-записи с поддоменом _acme-challenge.
-# в примере ниже это git, то есть полный домен выглядит примерно так: _acme-challenge.git.your-domen.com
+# пример запуска для удаления TXT на _acme-challenge.git это ./remove-txt.sh _acme-challenge.git
+
 input_data="$(
   jq -nc \
     --arg username "$REGRU_USER" \
     --arg password "$REGRU_PASS" \
     --arg domain "$REGRU_ZONE" \
-    --arg subdomain "_acme-challenge.git" \
+    --arg subdomain "$SUBDOMAIN" \
     '{
       username: $username,
       password: $password,
