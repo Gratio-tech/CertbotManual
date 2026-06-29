@@ -30,3 +30,17 @@ chmod +x /opt/CertbotManual/*.sh && chmod 600 /opt/CertbotManual/example.conf
 # Первичный выпуск сертификата, а также ручной перевыпуск
 /opt/CertbotManual/manual-cert-renew.sh
 ```
+
+## Что может сломаться
+Если позже перенести репу, Certbot сохранит hook-пути в renewal config. Например:
+```
+manual_auth_hook = /opt/CertbotManual/regru-auth.sh
+```
+
+Если потом перенесёшь репу в `/root/CertbotManual` автообновление через certbot renew будет пытаться
+запускать старый путь `/opt/CertbotManual/...` и упадёт.
+
+После переноса надо либо перезапустить `manual-cert-renew.sh`, либо руками поправить:
+```
+nano /etc/letsencrypt/renewal/your.domen.conf
+```
