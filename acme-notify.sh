@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source /etc/example.conf
+# Определяем пути где находятся скрипты
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
+CONFIG_FILE="${SCRIPT_DIR}/example.conf}"
+
+source "$CONFIG_FILE"
 
 msg="${*:-}"
 [[ -n "$msg" ]] || exit 0

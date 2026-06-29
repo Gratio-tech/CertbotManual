@@ -4,8 +4,8 @@ set -euo pipefail
 # Определяем пути где находятся скрипты
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd -P)"
+CONFIG_FILE="${SCRIPT_DIR}/example.conf}"
 
-CONFIG_FILE="${CERTBOT_MANUAL_CONFIG:-/etc/example.conf}"
 source "$CONFIG_FILE"
 
 LOG=/var/log/certbot-regru-hook.log
